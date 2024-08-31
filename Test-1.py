@@ -6,4 +6,4 @@ else:
     print(x ** 7)
     print("x is a variable")
 
-print("A change was made."
+print("A change was made.")
