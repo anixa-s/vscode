@@ -1,0 +1,107 @@
+from vex import *
+
+
+
+
+# Initialize the brain, controller, and motor
+brain = Brain()
+controller = Controller(ControllerType.PRIMARY)
+motor = Motor(Ports.PORT8)  # Change to the correct motor port if necessary
+piston1 = Pneumatics(brain.three_wire_port.h)
+piston2 = Pneumatics(brain.three_wire_port.g)
+
+
+
+
+# Drivetrain
+# Motor setup
+left_front_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+right_front_motor = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
+left_back_motor = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
+right_back_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+
+
+
+
+# Intake Conveyer Pneumatics
+# Set a flag to track whether the intake and conveyor are on or off
+intake_on = False
+
+
+
+
+# Flag to track button state (to toggle on press only)
+button_pressed = False
+
+
+
+
+def set_motor_speeds(left_speed, right_speed):
+    # Clip motor speeds to avoid exceeding 100%
+    left_speed = max(-100, min(100, left_speed))
+    right_speed = max(-100, min(100, right_speed))
+
+
+
+
+    # Apply the calculated speed to each motor
+    left_front_motor.spin(DirectionType.FORWARD, left_speed, VelocityUnits.PERCENT)
+    left_back_motor.spin(DirectionType.FORWARD, left_speed, VelocityUnits.PERCENT)
+    right_front_motor.spin(DirectionType.FORWARD, right_speed, VelocityUnits.PERCENT)
+    right_back_motor.spin(DirectionType.FORWARD, right_speed, VelocityUnits.PERCENT)
+
+
+
+
+def main():
+    while True:
+        # Read joystick values
+        forward = controller.axis3.position()  # Left joystick Y-axis (forward/backward)
+        turn = controller.axis1.position()     # Right joystick X-axis (turning)
+       
+        # Greater than -100, less than 0, is turn right -- Less than 100, greater than 0, is turn left
+        # Calculate motor speeds for split arcade
+        left_speed = forward + turn  # Combine forward/backward with turning
+        right_speed = forward - turn
+
+
+
+
+        # Set motor speeds
+        set_motor_speeds(left_speed, right_speed)
+
+
+
+
+        # Add a small delay to prevent CPU overload
+        wait(20, MSEC)
+
+
+
+
+            # Check if R1 is pressed to spin the motor forward
+        if controller.buttonR1.pressing():
+            motor.spin(DirectionType.REVERSE, 260, VelocityUnits.PERCENT)
+        # Check if R2 is pressed to spin the motor in reverse
+        elif controller.buttonR2.pressing():
+            motor.spin(DirectionType.FORWARD, 260, VelocityUnits.PERCENT)
+        # If neither button is pressed, stop the motor
+        else:
+            motor.stop()
+        #When L1 button is pressed, pneumatics will open
+        if controller.buttonL1.pressing():
+            piston1.open()
+            piston2.open()
+        #When L2 button is pressed, pneumatics will close
+        elif controller.buttonL2.pressing():
+            piston1.close()
+            piston2.close()
+
+
+
+
+        # Add a small delay to avoid too many checks
+            sleep(20)
+
+
+main()
