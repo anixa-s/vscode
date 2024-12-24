@@ -1,0 +1,73 @@
+from vex import *
+
+
+# Initialize devices
+brain = Brain()
+controller = Controller(ControllerType.PRIMARY)
+
+
+# Motors and pneumatics
+left_front_motor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+right_front_motor = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
+left_back_motor = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
+right_back_motor = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+conveyor_motor = Motor(Ports.PORT8, GearSetting.RATIO_18_1, False)
+
+
+# Pneumatics for gripping the stake
+stake_clipper = Pneumatics(brain.three_wire_port.h)
+
+
+# Drivetrain constants
+WHEEL_DIAMETER_INCHES = 4.125  # Adjust based on your robot
+CIRCUMFERENCE = WHEEL_DIAMETER_INCHES * 3.14159
+TICKS_PER_REVOLUTION = 360  # Encoder ticks per wheel revolution
+
+
+# Function to drive a certain distance (in inches)
+def drive_distance(inches, speed=50):
+   # Calculate the number of motor revolutions needed
+   revolutions = inches / CIRCUMFERENCE
+   ticks = int(revolutions * TICKS_PER_REVOLUTION)
+
+
+   # Reset motor positions
+   left_front_motor.set_position(0, RotationUnits.DEG)
+   right_front_motor.set_position(0, RotationUnits.DEG)
+
+
+   # Spin motors forward
+   left_front_motor.spin_for(DirectionType.FORWARD, ticks, RotationUnits.DEG, speed, VelocityUnits.PERCENT, False)
+   left_back_motor.spin_for(DirectionType.FORWARD, ticks, RotationUnits.DEG, speed, VelocityUnits.PERCENT, False)
+   right_front_motor.spin_for(DirectionType.FORWARD, ticks, RotationUnits.DEG, speed, VelocityUnits.PERCENT, False)
+   right_back_motor.spin_for(DirectionType.FORWARD, ticks, RotationUnits.DEG, speed, VelocityUnits.PERCENT, True)
+
+
+# Function to stop the drivetrain
+def stop_drivetrain():
+   left_front_motor.stop()
+   left_back_motor.stop()
+   right_front_motor.stop()
+   right_back_motor.stop()
+
+
+# Autonomous routine
+def autonomous():
+   # Step 1: Drive forward to the stake (e.g., 24 inches or 1 tile)
+   drive_distance(24, 50)  # Adjust distance as needed to reach the stake
+
+
+   # Step 2: Clip the stake using the pneumatic system
+   stake_clipper.open()  # Open the clip
+   wait(0.5, SECONDS)    # Allow time for the clip to open
+   stake_clipper.close() # Close the clip to grip the stake
+   wait(1, SECONDS)      # Ensure it's securely clipped
+
+
+   # Step 3: Drive forward to the next white line (e.g., 24 inches or 1 tile)
+   drive_distance(24, 50)  # Adjust distance as needed to reach the next white line
+   stop_drivetrain()
+
+
+# Run the autonomous function
+autonomous()
