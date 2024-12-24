@@ -1,0 +1,32 @@
+from vex import Brain, Ports, Pneumatics, Controller, wait, MSEC
+
+
+# Initialize the Brain and Controller
+brain = Brain()
+controller = Controller()
+
+
+# Set up the pneumatic solenoid (using the correct Pneumatics class)
+stake_clip = Pneumatics(Ports.PORT3)
+
+
+# Variable to track the state of the solenoid
+stake_clip_extended = False
+
+
+# Function to toggle the pneumatic state
+def toggle_pneumatic():
+    global stake_clip_extended
+    if stake_clip_extended:
+        stake_clip.close()  # Retract the piston
+    else:
+        stake_clip.open()   # Extend the piston
+    stake_clip_extended = not stake_clip_extended  # Toggle the state
+
+
+# Main loop
+while True:
+    # Check if the 'L1' button is pressed on the controller
+    if controller.buttonL1.pressing():
+        toggle_pneumatic()
+        wait(500, MSEC)  # Debounce delay to prevent rapid toggling
