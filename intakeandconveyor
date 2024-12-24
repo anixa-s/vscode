@@ -1,0 +1,41 @@
+from vex import *
+
+
+# Initialize the brain, controller, and motor
+brain = Brain()
+controller = Controller(ControllerType.PRIMARY)
+motor = Motor(Ports.PORT8)  # Change to the correct motor port if necessary
+
+
+# Set a flag to track whether the intake and conveyor are on or off
+intake_on = False
+
+
+# Flag to track button state (to toggle on press only)
+button_pressed = False
+
+
+# Function to toggle the intake and conveyor
+def toggle_intake():
+    global intake_on
+    if intake_on:
+        motor.stop()
+    else:
+       motor.spin(DirectionType.FORWARD,100,VelocityUnits.PERCENT)
+    intake_on = not intake_on
+
+
+# Main loop
+while True:
+    # Check if the R1 button is pressed and was not already pressed in the previous loop
+    if controller.buttonR1.pressing() and not button_pressed:
+        toggle_intake()
+        button_pressed = True  # Prevent toggling again until the button is released
+   
+    # If the button is not pressed, reset the button state
+    if not controller.buttonR1.pressing():
+        button_pressed = False
+
+
+    # Add a small delay to avoid too many checks
+    sleep(20)
